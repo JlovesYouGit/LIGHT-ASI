@@ -8,6 +8,7 @@ Ruleset reference: LLM_GATEWAY_RULESET.md § 6.3 (response format), § 7 (auth/r
 
 import time
 import logging
+from engine.world.onion_gateway import OnionMessage
 
 logger = logging.getLogger("light-asi.api.handlers")
 
@@ -34,6 +35,7 @@ def handle_create_token(body, user, graph, auth, ingester):
     """
     username = body.get("username", "").strip()
     role     = body.get("role", "guest").strip()
+    token    = body.get("token", None)
 
     if not username:
         return 400, {"error": "username is required"}
@@ -43,7 +45,7 @@ def handle_create_token(body, user, graph, auth, ingester):
         return 403, {"error": f"Role '{role}' requires admin privileges."}
 
     try:
-        new_user = auth.create_user(username, role)
+        new_user = auth.create_user(username, role, token=token)
     except ValueError as e:
         return 409, {"error": str(e)}
 
@@ -104,6 +106,18 @@ def handle_index(body, user, graph, auth, ingester):
         return 400, {"error": "text is required"}
 
     metadata["indexed_by"] = user.username
+    
+    # Phase 2 fix: Also ingest into the semantic map so it's searchable by the enricher
+    from engine.world.feeds import FeedItem
+    item = FeedItem(
+        source=metadata.get("source", "user_index"),
+        title=metadata.get("title", text[:50]),
+        text=text,
+        url=metadata.get("url", ""),
+        tags=metadata.get("tags", []),
+    )
+    graph.semantic_map.ingest(item)
+
     hashes = graph.index_text(text, metadata=metadata)
     return 200, {
         "indexed_tokens": len(hashes),
@@ -181,3 +195,142 @@ def handle_backup(body, user, graph, auth, ingester):
         return 403, {"error": "Admin only."}
     summary = graph.backup()
     return 200, summary
+
+
+def handle_latch_video(body, user, graph, auth, ingester):
+    """
+    POST /latch/video  { "token": "..." }
+    Latches the ASI model to an external video token to influence its mechanics.
+    """
+    if user.role not in ("admin", "developer"):
+        return 403, {"error": "Insufficient privileges."}
+    
+    token = body.get("token", "").strip()
+    if not token:
+        return 400, {"error": "token is required"}
+    
+    boosted = graph.boost_video_resonance(token)
+    return 200, {
+        "status": "latched",
+        "token": token,
+        "nodes_boosted": boosted,
+        "new_resonance": graph.collective_resonance()
+    }
+
+
+def handle_push_file(body, user, graph, auth, ingester):
+    """
+    POST /push/file  { "filename": "...", "content": "..." }
+    Pushes a file packet into the server and sets it as 'hosted'.
+    """
+    if user.role not in ("admin", "developer"):
+        return 403, {"error": "Insufficient privileges."}
+    
+    filename = body.get("filename", "").strip()
+    content  = body.get("content", "")
+    
+    if not filename:
+        return 400, {"error": "filename is required"}
+    
+    # Structure Instruction: Apply file push packet logic
+    summary = graph.push_file(filename, content)
+    return 201, summary
+
+
+def handle_house_self(body, user, graph, auth, ingester):
+    """
+    POST /house/self
+    Triggers the [SELF-HOUSING PROTOCOL] to migrate the ASI instance.
+    """
+    if user.role != "admin":
+        return 403, {"error": "Admin only."}
+    
+    summary = graph.self_house()
+    return 200, summary
+
+
+# ─── Onion Communication ──────────────────────────────────────────────────────
+
+def handle_onion_send(body, user, graph, auth, ingester):
+    """
+    POST /onion/send  { "text": "..." }
+    Sends a message to the target onion service and returns the decoded response.
+    """
+    if user.role not in ("admin", "developer"):
+        return 403, {"error": "Insufficient privileges."}
+    
+    text = body.get("text", "").strip()
+    if not text:
+        return 400, {"error": "text is required"}
+    
+    # 1. Fetch current signal
+    try:
+        raw_content, _ = graph.onion_gateway._fetch(graph.onion_gateway.gateway_target)
+        # 2. Decode signal directly
+        decoded = graph.onion_gateway.decode_traffic(raw_content)
+        
+        # 3. Store as a message
+        msg = OnionMessage(direction="in", payload=raw_content, decoded=decoded)
+        graph.onion_gateway.messages.append(msg)
+        
+        return 200, {"status": "success", "response": decoded}
+    except Exception as e:
+        return 500, {"error": str(e)}
+
+
+def handle_onion_messages(body, user, graph, auth, ingester):
+    """
+    GET /onion/messages?limit=10
+    Returns the message history with decoded traffic.
+    """
+    limit = int(body.get("limit", 10))
+    messages = graph.onion_messages(limit)
+    return 200, {"messages": messages, "count": len(messages)}
+
+
+def handle_onion_establish(body, user, graph, auth, ingester):
+    """
+    POST /onion/establish
+    Triggers the initial connection and protocol discovery.
+    """
+    if user.role not in ("admin", "developer"):
+        return 403, {"error": "Insufficient privileges."}
+    
+    res = graph.onion_gateway.establish_communication()
+    return 200, res
+
+
+def handle_onion_target(body, user, graph, auth, ingester):
+    """
+    POST /onion/target { "url": "..." }
+    """
+    if user.role not in ("admin", "developer"):
+        return 403, {"error": "Insufficient privileges."}
+    
+    url = body.get("url", "").strip()
+    if not url:
+        return 400, {"error": "url is required"}
+    
+    graph.onion_gateway.set_target(url)
+    return 200, {
+        "status": "latched",
+        "target": graph.onion_gateway.target,
+        "gateway": graph.onion_gateway.gateway_target
+    }
+
+
+def handle_onion_session(body, user, graph, auth, ingester):
+    """
+    POST /onion/session { "cookies": [{ "name": "...", "value": "...", "domain": "..." }] }
+    """
+    if user.role not in ("admin", "developer"):
+        return 403, {"error": "Insufficient privileges."}
+    
+    cookies = body.get("cookies", [])
+    for c in cookies:
+        graph.onion_gateway.inject_cookie(c['name'], c['value'], c['domain'])
+    
+    return 200, {
+        "status": "elevated",
+        "cookie_count": len(graph.onion_gateway.get_all_cookies())
+    }

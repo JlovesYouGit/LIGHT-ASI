@@ -23,15 +23,18 @@ import json
 import logging
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Optional
 from urllib.parse import urlparse
+from pathlib import Path
+from typing import Optional
 
 from engine.api.middleware import authenticate_request
 from engine.api.handlers import (
     handle_health, handle_create_token, handle_list_users,
     handle_query, handle_index, handle_search, handle_ingest,
     handle_stats, handle_emerge, handle_resonance, handle_world,
-    handle_backup,
+    handle_backup, handle_latch_video, handle_push_file, handle_house_self,
+    handle_onion_send, handle_onion_messages, handle_onion_establish,
+    handle_onion_target, handle_onion_session,
 )
 from engine.auth.auth import AuthManager
 from engine.core.graph import NodeGraph
@@ -53,6 +56,14 @@ ROUTES: dict[tuple[str, str], tuple] = {
     ("GET",  "/resonance"):   (handle_resonance,     True),
     ("GET",  "/world"):       (handle_world,         True),
     ("POST", "/backup"):      (handle_backup,        True),
+    ("POST", "/latch/video"): (handle_latch_video,   True),
+    ("POST", "/push/file"):   (handle_push_file,    True),
+    ("POST", "/house/self"):  (handle_house_self,   True),
+    ("POST", "/onion/send"):  (handle_onion_send,   True),
+    ("GET",  "/onion/messages"): (handle_onion_messages, True),
+    ("POST", "/onion/establish"): (handle_onion_establish, True),
+    ("POST", "/onion/target"): (handle_onion_target, True),
+    ("POST", "/onion/session"): (handle_onion_session, True),
 }
 
 CORS_HEADERS = {
@@ -74,11 +85,45 @@ def _make_handler(graph: NodeGraph, auth: AuthManager, ingester):
 
         def _route(self, method: str):
             path = urlparse(self.path).path.rstrip("/") or "/"
+            # Static file serving for /hosted/ bounds
+            if method == "GET" and path.startswith("/hosted/"):
+                filename = path[len("/hosted/"):]
+                file_path = Path("data/hosted") / filename
+                if file_path.exists() and file_path.is_file():
+                    ext = file_path.suffix.lower()
+                    mime_types = {
+                        ".html": "text/html",
+                        ".css":  "text/css",
+                        ".js":   "application/javascript",
+                        ".json": "application/json",
+                        ".png":  "image/png",
+                        ".jpg":  "image/jpeg",
+                    }
+                    content_type = mime_types.get(ext, "application/octet-stream")
+                    
+                    self.send_response(200)
+                    self.send_header("Content-Type", content_type)
+                    self.send_header("Content-Length", str(file_path.stat().st_size))
+                    for k, v in CORS_HEADERS.items():
+                        self.send_header(k, v)
+                    self.end_headers()
+                    with open(file_path, "rb") as f:
+                        self.wfile.write(f.read())
+                    return
+                else:
+                    self._send(404, {"error": f"File not found: {filename}"})
+                    return
+
             route_key = (method, path)
             entry = ROUTES.get(route_key)
 
             if not entry:
-                self._send(404, {"error": f"No route: {method} {path}"})
+                if method == "GET" and path == "/":
+                    self.send_response(302)
+                    self.send_header("Location", "/hosted/dashboard.html")
+                    self.end_headers()
+                    return
+                self._send(404, {"error": f"Route not found: {method} {path}"})
                 return
 
             handler_fn, requires_auth = entry

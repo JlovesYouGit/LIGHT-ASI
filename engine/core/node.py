@@ -30,6 +30,7 @@ class NodeMeta:
     hash_hex: str
     virtual_ip_tier: int
     resonance_weight: float
+    video_resonance: float = 1.0
     range_min: int = RANGE_MIN
     range_max: int = RANGE_MAX
     anchor: str = ANCHOR_CONST

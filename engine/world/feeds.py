@@ -176,8 +176,13 @@ def fetch_arxiv() -> list[FeedItem]:
 # ─── Generic RSS (BBC, Reuters, etc.) ─────────────────────────────────────────
 
 RSS_SOURCES = {
-    "bbc_world":  "https://feeds.bbci.co.uk/news/world/rss.xml",
-    "bbc_tech":   "https://feeds.bbci.co.uk/news/technology/rss.xml",
+    "bbc_world":    "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "bbc_tech":     "https://feeds.bbci.co.uk/news/technology/rss.xml",
+    "nasa_news":    "https://www.nasa.gov/rss/dyn/breaking_news.rss",
+    "mit_tech_rev": "https://www.technologyreview.com/feed/",
+    "wired_news":   "https://www.wired.com/feed/rss",
+    "sciencedaily": "https://www.sciencedaily.com/rss/all.xml",
+    "un_news":       "https://news.un.org/feed/subscribe/en/news/all/rss.xml"
 }
 
 RSS_NS = {

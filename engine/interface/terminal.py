@@ -61,6 +61,8 @@ HELP = """
   │  ingest                  run one world-net ingestion cycle        │
   │  world                   world-net + semantic map status          │
   │  search   <text>         search semantic map directly             │
+  │  onion    <text>         send message to CIA onion service        │
+  │  onsim    [on/off]       toggle onion simulator mode              │
   ├─ AUTH ────────────────────────────────────────────────────────────┤
   │  users                   list all users                           │
   │  adduser  <name> <role>  create user (roles: admin/dev/user/guest)│
@@ -300,6 +302,22 @@ class Terminal:
                 result = self.graph.query(arg)
                 result["timestamp"] = datetime.datetime.utcnow().isoformat() + "Z"
                 print(_fmt_response(result))
+
+            elif cmd == "onion":
+                if not arg:
+                    print("  Usage: onion <text>")
+                    continue
+                if not self._check_auth():
+                    continue
+                print(f"  [*] Sending to onion: {arg!r}...")
+                res = self.graph.onion_send(arg)
+                print(f"  [✓] Response: {res.get('response_decoded', '[no response]')}")
+                print()
+
+            elif cmd == "onsim":
+                enabled = arg.lower() != "off"
+                self.graph.onion_gateway.set_simulator(enabled)
+                print(f"  [✓] Onion simulator: {'ON' if enabled else 'OFF'}\n")
 
             else:
                 print(f"  [?] Unknown command: '{cmd}'. Type 'help'.")

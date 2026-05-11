@@ -30,6 +30,9 @@ logger = logging.getLogger("light-asi.ingester")
 DEFAULT_INTERVAL   = 120   # 2 minutes between full sweeps
 MIN_INTERVAL       = 30    # safety floor
 BATCH_SLEEP        = 0.1   # sleep between items during a batch
+MAX_CRAWL_DEPTH    = 2     # Global phase default
+MAX_LINKS_PER_PAGE = 5     # Avoid link explosion
+DOMAIN_DELAY       = 1.0   # 1s delay per domain crawl
 
 
 @dataclass
@@ -41,6 +44,7 @@ class IngestionMetrics:
     last_run_items: int = 0
     runs:           int = 0
     sources_seen:   dict = field(default_factory=dict)
+    visited_urls:   set = field(default_factory=set) # Deduplication cache
 
     def record_run(self, items: list[FeedItem], errors: int = 0) -> None:
         self.runs += 1
@@ -144,6 +148,68 @@ class WorldIngester:
             self._stop_event.wait(timeout=self.interval)
         logger.info("WorldIngester daemon exited.")
 
+    def _extract_links(self, html: str, base_url: str) -> list[str]:
+        """Extracts valid absolute URLs from HTML content."""
+        import re
+        from urllib.parse import urljoin, urlparse
+        
+        links = re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
+        if not links:
+            # Try relative links
+            rel_links = re.findall(r'href=["\'](/[^"\']+)["\']', html)
+            links = [urljoin(base_url, l) for l in rel_links]
+            
+        # Filter: same domain or high-authority extensions
+        valid = []
+        base_domain = urlparse(base_url).netloc
+        for link in links[:50]: # limit scan
+            if urlparse(link).netloc == base_domain or any(ext in link for ext in ['.gov', '.edu', '.org']):
+                valid.append(link)
+        return list(set(valid))
+
+    def _recursive_crawl(self, url: str, depth: int) -> int:
+        """Recursively fetches and indexes a URL up to depth."""
+        if depth < 0 or url in self.metrics.visited_urls or len(self.metrics.visited_urls) > 5000:
+            return 0
+        
+        self.metrics.visited_urls.add(url)
+        logger.info(f"Recursive Crawl (depth={depth}): {url}")
+        
+        try:
+            import urllib.request
+            req = urllib.request.Request(url, headers={"User-Agent": "Light-ASI/1.0 (WorldNet; Ingester)"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                content = resp.read().decode('utf-8', errors='ignore')
+            
+            # Index this page
+            title_match = re.search(r'<title>(.*?)</title>', content, re.IGNORECASE)
+            title = title_match.group(1) if title_match else url
+            
+            item = FeedItem(
+                title=title,
+                url=url,
+                summary=content[:500],
+                source="WorldNet-Crawler",
+                timestamp=time.time(),
+                tags=["recursive", f"depth-{depth}"]
+            )
+            
+            self.semantic_map.ingest(item)
+            self.graph.index_text(content, metadata=item.__dict__)
+            
+            count = 1
+            if depth > 0:
+                links = self._extract_links(content, url)
+                for link in links[:MAX_LINKS_PER_PAGE]:
+                    if self._stop_event.is_set(): break
+                    time.sleep(DOMAIN_DELAY)
+                    count += self._recursive_crawl(link, depth - 1)
+            return count
+            
+        except Exception as e:
+            logger.warning(f"Crawl error at {url}: {e}")
+            return 0
+
     def _ingest_cycle(self) -> dict:
         """
         One full fetch → hash → index cycle.
@@ -155,10 +221,17 @@ class WorldIngester:
 
         # Step 1: Fetch from all sources
         try:
-            items = fetch_all(hn_limit=8, wiki_count=5, arxiv=True, rss=True)
+            items = fetch_all(hn_limit=10, wiki_count=10, arxiv=True, rss=True)
+            # Add some seed recursion for Phase 2
+            recursive_seeds = [
+                "https://en.wikipedia.org/wiki/Artificial_general_intelligence",
+                "https://news.ycombinator.com",
+                "https://arxiv.org/list/cs.AI/recent"
+            ]
         except Exception as e:
             logger.error(f"Fetch error: {e}")
             items = []
+            recursive_seeds = []
 
         errors = 0
         indexed_this_cycle = 0
@@ -197,6 +270,13 @@ class WorldIngester:
 
         self.metrics.record_run(items, errors)
         self.metrics.total_indexed += indexed_this_cycle
+
+        # Step 5: Execute Recursive Phase
+        for seed in recursive_seeds:
+            if self._stop_event.is_set(): break
+            indexed_this_cycle += self._recursive_crawl(seed, MAX_CRAWL_DEPTH)
+            
+        self.metrics.total_indexed += (indexed_this_cycle - indexed_this_cycle) # already added in crawl
 
         elapsed = (time.perf_counter() - t_start) * 1000
         summary = {

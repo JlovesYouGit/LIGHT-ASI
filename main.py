@@ -44,8 +44,12 @@ def main() -> None:
     graph = NodeGraph()
     auth  = AuthManager()
 
-    # Create default admin
-    admin = auth.create_user("admin", "admin")
+    # Create default admin with a fixed token for development persistence
+    admin_token = "ASI-DEVELOPER-SECURE-ACCESS-2026"
+    try:
+        admin = auth.create_user("admin", "admin", token=admin_token)
+    except ValueError:
+        admin = auth._users["admin"]
     print(f"\n  [*] Admin token (save this): {admin.token}\n")
 
     # WorldIngester

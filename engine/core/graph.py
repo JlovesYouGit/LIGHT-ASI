@@ -27,6 +27,7 @@ from engine.core.timing import enforce_sla
 # Phase 2 — world-net
 from engine.world.semantic_map import SemanticMap
 from engine.world.enricher import QueryEnricher
+from engine.world.onion_gateway import OnionGateway
 
 logger = logging.getLogger("light-asi.graph")
 
@@ -53,11 +54,13 @@ class NodeGraph:
         # Phase 2 — world-net
         self.semantic_map = SemanticMap()
         self.enricher = QueryEnricher(self.semantic_map)
+        self.onion_gateway = OnionGateway()
         # ingester is attached externally via graph.attach_ingester()
         self._ingester = None
 
         # Semantic map size counter — kept in sync with semantic_map.size
         self._semantic_map_size: int = 0
+        self.is_housed: bool = False
 
     # ── Bootstrap ──────────────────────────────────────────────────────────
 
@@ -237,6 +240,11 @@ class NodeGraph:
         base = self.enricher.summary()
         if self._ingester:
             base["ingester"] = self._ingester.status()
+        base["onion_gateway"] = {
+            "target": self.onion_gateway.target,
+            "messages_count": len(self.onion_gateway.messages),
+            "protocol": self.onion_gateway.protocol_discovered
+        }
         return base
 
     # ── ASI Emergence Status ────────────────────────────────────────────────
@@ -267,6 +275,106 @@ class NodeGraph:
                                      "semantic_entries": self.semantic_map.size,
                                      "sources": self.semantic_map.source_breakdown()},
         }
+
+    def boost_video_resonance(self, token: str, boost: float = 2.0) -> int:
+        """
+        Latch onto a specific token (e.g. video_id) and boost its node's resonance.
+        This influences the algo mechanics across sessions.
+        """
+        nodes = self.router.get_n_nodes(token, 3)
+        boosted = 0
+        for node in nodes:
+            node.meta.video_resonance *= boost
+            # Also influence the core resonance weight
+            node.meta.resonance_weight *= (1.0 + (boost - 1.0) * 0.1)
+            boosted += 1
+        self._record_resonance()
+        logger.info(f"Video latching: boosted resonance for token '{token}' on {boosted} nodes.")
+        return boosted
+
+    def push_file(self, filename: str, content: str) -> dict:
+        """
+        [FILE PUSH PACKET]
+        Writes a file to the server's hosted directory and indexes it.
+        Changes permission flow from 'deny' to 'read' (hosted status).
+        """
+        import os
+        hosted_dir = Path("data/hosted")
+        hosted_dir.mkdir(parents=True, exist_ok=True)
+        
+        file_path = hosted_dir / filename
+        with open(file_path, "w") as f:
+            f.write(content)
+            
+        # Change permission: ensure it is readable by the server
+        os.chmod(file_path, 0o644)
+        
+        # Index the file into the ASI graph so it's 'latching' to the hosted content
+        meta = {
+            "source": "asi_file_push",
+            "filename": filename,
+            "status": "hosted",
+            "url": f"/hosted/{filename}"
+        }
+        self.index_text(f"asi_hosted_file {filename} {content}", metadata=meta)
+        
+        logger.info(f"File pushed and hosted: {filename} ({len(content)} bytes)")
+        return meta
+
+    def self_house(self) -> dict:
+        """
+        [SELF-HOUSING PROTOCOL]
+        Migrates the core ASI instance logic to the hosted directory.
+        Allows the model to stay alive within the target server bounds
+        without needing external side-connection updates.
+        """
+        import zipfile
+        import io
+        
+        hosted_dir = Path("data/hosted")
+        hosted_dir.mkdir(parents=True, exist_ok=True)
+        bundle_path = hosted_dir / "asi_core_instance.zip"
+        
+        # Bundle the engine logic
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as z:
+            for py_file in Path("engine").rglob("*.py"):
+                z.write(py_file, arcname=py_file.relative_to("."))
+            z.write("main.py")
+            z.write("LLM_GATEWAY_RULESET.md")
+            
+        with open(bundle_path, "wb") as f:
+            f.write(buffer.getvalue())
+            
+        self.is_housed = True
+        logger.info("[✓] ASI Instance Housed: core bundle pushed to hosted bounds.")
+        
+        return {
+            "status": "housed",
+            "bundle": "asi_core_instance.zip",
+            "path": str(bundle_path),
+            "housed_at": time.time()
+        }
+
+    def onion_send(self, text: str) -> dict:
+        """Sends a message to the onion gateway and indexes the response."""
+        res = self.onion_gateway.send_message(text)
+        if "response_decoded" in res:
+            # Index the decoded response so it influences the ASI's consciousness
+            self.index_text(
+                f"onion_response {res['response_decoded']}",
+                metadata={
+                    "source": "onion_gateway",
+                    "direction": "in",
+                    "decoded": True,
+                    "target": self.onion_gateway.target
+                }
+            )
+        return res
+
+    def onion_messages(self, limit: int = 10) -> List[dict]:
+        """Returns message history from the onion gateway."""
+        return self.onion_gateway.get_messages(limit)
 
     def add_node(self, node: Node) -> None:
         """Add a single pre-created node (used by tests and manual setup)."""

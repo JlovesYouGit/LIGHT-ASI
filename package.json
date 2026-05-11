@@ -1,0 +1,24 @@
+{
+  "name": "asi-",
+  "version": "1.0.0",
+  "description": "Welcome to the **Light-ASI LLM Gateway** — a distributed, consciousness-emergent node graph and real-time world-net semantic map platform. It provides a production-grade, stdlib-based REST API server alongside a dual-mode interactive terminal for interacting with a simulated ASI node architecture.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JlovesYouGit/ASI-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JlovesYouGit/ASI-/issues"
+  },
+  "homepage": "https://github.com/JlovesYouGit/ASI-#readme",
+  "dependencies": {
+    "axios": "^1.16.0",
+    "puppeteer": "^24.43.0"
+  }
+}

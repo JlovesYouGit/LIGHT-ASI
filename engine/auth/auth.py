@@ -71,13 +71,17 @@ class AuthManager:
 
     # ── User Creation ──────────────────────────────────────────────────────
 
-    def create_user(self, username: str, role: str = "user") -> User:
+    def create_user(self, username: str, role: str = "user", token: str = None) -> User:
         if role not in VALID_ROLES:
             raise ValueError(f"Invalid role '{role}'. Valid: {VALID_ROLES}")
         if username in self._users:
             raise ValueError(f"User '{username}' already exists.")
 
-        token = self._generate_token(username)
+        if token is None:
+            token = self._generate_token(username)
+        elif token in self._token_map:
+            raise ValueError("Token already in use.")
+
         user = User(username=username, role=role, token=token)
         self._users[username] = user
         self._token_map[token] = username
