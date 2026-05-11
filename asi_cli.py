@@ -168,6 +168,72 @@ def index(text, source="cli"):
         "knowledge_nodes": graph.semantic_map.size
     }
 
+def fetch_content(url):
+    """Fetch and extract content from URL."""
+    graph = get_engine()
+    if not graph:
+        return {"error": "Engine not initialized"}
+    
+    try:
+        import urllib.request
+        from urllib.error import URLError, HTTPError
+        import re
+        import html
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+        }
+        
+        req = urllib.request.Request(url, headers=headers)
+        
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                content = response.read().decode('utf-8', errors='ignore')
+        except (URLError, HTTPError) as e:
+            return {"error": f"Failed to fetch URL: {str(e)}", "url": url}
+        
+        # Extract main content from HTML
+        content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.DOTALL | re.IGNORECASE)
+        content = re.sub(r'<style[^>]*>.*?</style>', '', content, flags=re.DOTALL | re.IGNORECASE)
+        
+        # Extract text content
+        text_content = re.sub(r'<[^>]+>', ' ', content)
+        text_content = html.unescape(text_content)
+        text_content = re.sub(r'\s+', ' ', text_content).strip()
+        
+        # Try to find article content
+        article_patterns = [
+            r'<article[^>]*>(.*?)</article>',
+            r'<main[^>]*>(.*?)</main>',
+            r'class="[^"]*article[^"]*"[^>]*>(.*?)</[^>]*>',
+            r'class="[^"]*content[^"]*"[^>]*>(.*?)</[^>]*>',
+        ]
+        
+        article_content = ""
+        for pattern in article_patterns:
+            matches = re.findall(pattern, content, re.DOTALL | re.IGNORECASE)
+            if matches:
+                article_content = matches[0]
+                article_content = re.sub(r'<[^>]+>', ' ', article_content)
+                article_content = html.unescape(article_content)
+                article_content = re.sub(r'\s+', ' ', article_content).strip()
+                break
+        
+        if not article_content:
+            article_content = text_content[:2000]
+        
+        return {
+            "url": url,
+            "status": "success",
+            "content_length": len(content),
+            "extracted_text": article_content[:3000],
+            "full_text_available": len(article_content) > 3000,
+            "content_type": "extracted_html"
+        }
+        
+    except Exception as e:
+        return {"error": f"Content extraction failed: {str(e)}", "url": url}
+
 def status():
     """Get engine status."""
     graph = get_engine()
@@ -185,8 +251,8 @@ def status():
 
 def main():
     parser = argparse.ArgumentParser(description='Light-ASI CLI')
-    parser.add_argument('command', choices=['query', 'search', 'index', 'status'])
-    parser.add_argument('text', nargs='?', help='Text for query/search/index')
+    parser.add_argument('command', choices=['query', 'search', 'index', 'status', 'fetch'])
+    parser.add_argument('text', nargs='?', help='Text for query/search/index or URL for fetch')
     parser.add_argument('--top_k', type=int, default=3, help='Number of results')
     
     args = parser.parse_args()
@@ -206,6 +272,11 @@ def main():
             print("Error: index requires text argument")
             return
         result = index(args.text)
+    elif args.command == 'fetch':
+        if not args.text:
+            print("Error: fetch requires URL argument")
+            return
+        result = fetch_content(args.text)
     elif args.command == 'status':
         result = status()
     
