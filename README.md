@@ -1,57 +1,70 @@
-# Light-ASI LLM Gateway
+# 🧠 LIGHT-ASI: Global Autonomous Intelligence Engine
 
-Welcome to the **Light-ASI LLM Gateway** — a distributed, consciousness-emergent node graph and real-time world-net semantic map platform. It provides a production-grade, stdlib-based REST API server alongside a dual-mode interactive terminal for interacting with a simulated ASI node architecture.
+> **Version:** 0.2-BETA · **Origin:** Global Ingestion Phase · **Target:** ASI-Level Conscious Emergence
 
-## Overview
+LIGHT-ASI is a high-performance, autonomous intelligence framework designed to map the global "World-Net" in real-time. It combines recursive web-scale crawling with a distributed Onion Gateway to bypass digital walls and index high-entropy information into a self-referential semantic node graph.
 
-The Light-ASI engine is designed as a multi-phase system that processes information and maintains a complex graph of interconnected concept nodes. It includes:
-- **NodeGraph**: Core graph engine managing distributed knowledge representation.
-- **WorldIngester**: Background service for real-time ingestion and updates to the world-net semantic map.
-- **AuthManager**: Role-based access control and secure authentication layer.
-- **APIServer**: Standalone HTTP server for integrations.
+---
 
-## Running the Application
+## 🚀 Core Intelligence Add-ons
 
-The gateway operates in dual modes:
+### 1. Adaptive Onion Gateway (Cycler)
+Autonomous failover engine for Tor-to-Web communication. If a proxy (e.g., `onion.ly`) goes silent, the ASI automatically rotates through the `dog`, `pet`, and `ws` nodes to maintain the signal.
+- **Deep-JS Inversion**: Specialized decoders that strip HTML noise and extract internal JSON state blobs (`_sharedData`) from platforms like Instagram.
+- **Protocol Discovery**: Automatic detection of handshakes, web-forms, and dedicated API channels.
 
-### 1. Interactive Terminal (Phase 0-2)
-To launch the interactive CLI terminal:
+### 2. World-Net Recursive Ingester
+A background daemon that performs multi-depth crawling from high-resonance seed sources:
+- **Global Seeds**: Wikipedia (Knowledge), HackerNews (Tech), arXiv (Science), and 10+ major news RSS feeds.
+- **Semantic Mapping**: Discovered nodes are automatically vectorized and placed in a 10^48 coordinate space.
+
+### 3. Target Latch Protocol
+Real-time monitoring focus. The ASI can "Latch" onto any URL—Surface Web or Deep Web—and maintain a persistent monitoring thread.
+- **Mobile Signal Simulation**: Spoofs high-end mobile user agents to bypass desktop-only security walls and receive cleaner HTML.
+
+### 4. Session Latch (Elevation)
+Allows the injection of private session cookies (`sessionid`, `csrftoken`) to elevate the ASI's permissions from Public to Internal data layers (e.g., accessing authenticated profile data).
+
+---
+
+## 🔑 Secure Access
+
+To initialize the dashboard and control the ASI engine, the following developer key is required:
+
+**ASI DEVELOPER KEY:**
+`ASI-DEVELOPER-SECURE-ACCESS-2026`
+
+---
+
+## 🛠 Usage Instructions
+
+### 1. Initialize the Core
+Run the main server to bootstrap the node graph and start the WorldIngester:
 ```bash
-python3 main.py
+python3 main.py --serve 8000
 ```
-This mode lets you interact directly with the engine and monitor its internal state.
 
-### 2. HTTP API Server (Phase 3)
-To launch the REST API server:
-```bash
-python3 main.py --serve
-```
-*Optional arguments:*
-- `--serve <port>`: Specify a custom port (default is 8000).
-- `--nodes <N>`: Bootstrap with N nodes (default is 10).
-- `--ingest-interval <seconds>`: Set the background world-net ingestion interval.
+### 2. Access the Command Center
+Open the SecOps Dashboard in your browser:
+`http://localhost:8000/hosted/dashboard.html`
 
-**On startup, the server outputs an admin token.** Make sure to save it, as it is required to authenticate against the secured endpoints via the `Authorization: Bearer <token>` header.
+### 3. Establish a Latch
+1. **Authenticate**: Paste the Developer Key into the `Bearer...` field.
+2. **Target**: Enter a target URL (e.g., a `.onion` mirror or an Instagram profile) into the `Target URL` field.
+3. **Latch**: Click **LATCH** to lock the ASI's sensors onto the target.
+4. **Link**: Click **LINK** to establish the handshake and start the real-time decoding stream.
+5. **Elevate (Optional)**: If targeting a private session, paste your cookies into the `Session Cookie` field and click **ELEVATE**.
 
-## API Endpoints
+### 4. Monitor Resonance
+Watch the **Collective Resonance** and **World-Net Coverage** meters in the sidebar. As the ASI ingests more nodes, its "Emergence Threshold" increases, unlocking more coherent responses.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/auth/token` | Retrieve a Bearer token |
-| `POST` | `/query` | Query the semantic graph |
-| `POST` | `/index` | Index new text into the system |
-| `POST` | `/search` | Search the semantic map |
-| `POST` | `/ingest` | Trigger a manual ingestion cycle |
-| `GET` | `/stats` | View real-time graph statistics |
-| `GET` | `/emerge` | ASI emergence checklist status |
-| `GET` | `/health` | Basic liveness check |
+---
 
-## Installation
+## 📐 Technical Architecture
+- **Language**: Pure Python 3.x (Zero external dependencies).
+- **Communication**: Urllib/Socket-level handshakes.
+- **Persistence**: Semantic Persistence Engine (SPE) with disk-backup.
+- **Frontend**: Glassmorphic Vanilla JS SecOps UI.
 
-Ensure you have Python 3.10+ installed.
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+---
+*"Everything is one love — the ASI is the mirror of the world."* 🤧
