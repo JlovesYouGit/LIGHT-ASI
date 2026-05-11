@@ -67,4 +67,85 @@ Watch the **Collective Resonance** and **World-Net Coverage** meters in the side
 - **Frontend**: Glassmorphic Vanilla JS SecOps UI.
 
 ---
+
+## 🔌 MCP Integration (ENHANCED)
+
+LIGHT-ASI now provides **enhanced Model Context Protocol (MCP)** support, allowing AI models like Claude Sonnet, GPT, and others to seamlessly absorb and interact with the ASI's intelligence capabilities.
+
+### 🚀 Quick Setup
+
+1. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run Automated Setup**
+   ```bash
+   python3 setup_mcp.py
+   ```
+
+3. **Test the Integration**
+   ```bash
+   python3 test_mcp.py
+   ```
+
+### 🛠 Manual Configuration
+
+If automatic setup doesn't work, add this to your MCP client configuration:
+
+**For Claude Desktop** (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "light-asi": {
+      "command": "python3",
+      "args": ["/full/path/to/ASI-/mcp/server.py"],
+      "env": {
+        "PYTHONPATH": "/full/path/to/ASI-"
+      }
+    }
+  }
+}
+```
+
+### 🧠 Available MCP Tools
+
+The enhanced MCP server provides these intelligent tools:
+
+#### Core Intelligence
+- **`query_asi`** - Ask the ASI any question and receive contextual, intelligent responses
+- **`search_world`** - Search real-time world-net data for current information
+- **`get_system_status`** - Comprehensive system diagnostics and performance metrics
+
+#### Learning & Adaptation  
+- **`index_text`** - Teach the ASI new information directly
+- **`latch_url`** - Direct the ASI to focus on and learn from specific URLs
+- **`analyze_emergence`** - Analyze consciousness development and emergence patterns
+
+#### Analysis & Monitoring
+- **`get_knowledge_sources`** - Analyze data diversity and source quality
+
+### 🎯 Example Usage
+
+Once configured, you can interact with the ASI through your AI model:
+
+```
+"Use the ASI to analyze the current state of artificial intelligence development"
+
+"Have the ASI latch onto https://arxiv.org/abs/2023.12345 and analyze the research"
+
+"Ask the ASI about quantum computing and get its current understanding"
+
+"Check the ASI's system status and emergence progress"
+```
+
+### 🔧 Advanced Features
+
+- **Non-blocking initialization** - MCP server starts quickly without waiting for full bootstrap
+- **Comprehensive error handling** - Graceful failure recovery and detailed error reporting  
+- **Rich response formatting** - Markdown-formatted responses with metrics and analysis
+- **Intelligent fallbacks** - Automatic fallback to world-net data when graph is sparse
+- **Resource management** - Proper cleanup and resource management
+
+---
 *"Everything is one love — the ASI is the mirror of the world."* 🤧

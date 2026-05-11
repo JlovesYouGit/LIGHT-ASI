@@ -1,0 +1,72 @@
+{
+  "name": "Light-ASI",
+  "version": "0.2.0",
+  "description": "Global Autonomous Intelligence Engine with real-time world-net mapping",
+  "server": {
+    "command": "python3",
+    "args": ["mcp/server.py"],
+    "cwd": ".",
+    "env": {
+      "PYTHONPATH": ".",
+      "ASI_LOG_LEVEL": "INFO"
+    }
+  },
+  "tools": [
+    {
+      "name": "query_asi",
+      "description": "Query the ASI node graph and return raw internal scan data including source nodes, resonance scores, and unfiltered semantic results",
+      "category": "intelligence"
+    },
+    {
+      "name": "search_world",
+      "description": "Search the ASI's real-time world-net semantic map and return raw results with full text content, source metadata, and internal identifiers",
+      "category": "search"
+    },
+    {
+      "name": "latch_url",
+      "description": "Direct ASI to focus on and extract from specific URLs, returns raw JSON with latching operation results and extracted data",
+      "category": "learning"
+    },
+    {
+      "name": "index_text",
+      "description": "Inject text directly into ASI knowledge base, returns raw JSON with indexing operation results including semantic tokens and system metrics",
+      "category": "learning"
+    },
+    {
+      "name": "get_system_status",
+      "description": "Get comprehensive ASI diagnostics and metrics as raw JSON including resonance metrics, knowledge base statistics, and system health indicators",
+      "category": "monitoring"
+    },
+    {
+      "name": "analyze_emergence",
+      "description": "Analyze ASI consciousness development and return raw emergence data including resonance patterns, knowledge integration metrics, and developmental milestones",
+      "category": "analysis"
+    },
+    {
+      "name": "get_knowledge_sources",
+      "description": "Analyze ASI knowledge sources and return raw data about source types, data quality, and coverage statistics",
+      "category": "analysis"
+    },
+    {
+      "name": "get_raw_graph_dump",
+      "description": "Get raw internal graph dump from the ASI's node graph including all node IDs, connections, resonance values, and metadata - actual internal scan data with no filtering",
+      "category": "internal"
+    },
+    {
+      "name": "index_codebase",
+      "description": "Index the current codebase directory into ASI knowledge base - scans directory and indexes all code files with their paths and structure for development context",
+      "category": "learning"
+    }
+  ],
+  "claude_desktop_config": {
+    "mcpServers": {
+      "light-asi": {
+        "command": "python3",
+        "args": ["REPLACE_WITH_FULL_PATH/ASI-/mcp/server.py"],
+        "env": {
+          "PYTHONPATH": "REPLACE_WITH_FULL_PATH/ASI-"
+        }
+      }
+    }
+  }
+}
