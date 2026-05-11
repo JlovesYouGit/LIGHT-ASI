@@ -120,7 +120,12 @@ The enhanced MCP server provides these intelligent tools:
 #### Learning & Adaptation  
 - **`index_text`** - Teach the ASI new information directly
 - **`latch_url`** - Direct the ASI to focus on and learn from specific URLs
+- **`index_codebase`** - Automatically index current directory codebase for development context
 - **`analyze_emergence`** - Analyze consciousness development and emergence patterns
+
+#### Intelligence Extraction
+- **`fetch_content`** - Extract full content from URLs found in ASI search results (bypasses paywalls)
+- **`get_raw_graph_dump`** - Access raw internal node graph data for advanced analysis
 
 #### Analysis & Monitoring
 - **`get_knowledge_sources`** - Analyze data diversity and source quality
@@ -137,15 +142,62 @@ Once configured, you can interact with the ASI through your AI model:
 "Ask the ASI about quantum computing and get its current understanding"
 
 "Check the ASI's system status and emergence progress"
+
+"Find sensitive information about security vulnerabilities and extract the full content"
 ```
 
-### 🔧 Advanced Features
+### � Standalone CLI Usage
+
+For standalone use without MCP clients:
+
+```bash
+# Query the ASI with auto-indexed codebase
+python3 asi_cli.py query "What is the MCP server?"
+
+# Search for specific topics
+python3 asi_cli.py search "semantic map"
+
+# Extract full content from URLs
+python3 asi_cli.py fetch "https://www.wired.com/story/security-news-this-week-hackable-robot-lawnmower-unlocks-a-new-nightmare/"
+
+# Index new information
+python3 asi_cli.py index "Your custom text here"
+
+# Check system status
+python3 asi_cli.py status
+```
+
+### �🔧 Advanced Features
 
 - **Non-blocking initialization** - MCP server starts quickly without waiting for full bootstrap
 - **Comprehensive error handling** - Graceful failure recovery and detailed error reporting  
-- **Rich response formatting** - Markdown-formatted responses with metrics and analysis
-- **Intelligent fallbacks** - Automatic fallback to world-net data when graph is sparse
+- **Raw JSON responses** - All tools return unfiltered internal scan data
+- **Intelligent fallbacks** - Automatic fallback to semantic map when graph query fails
+- **Content extraction** - Bypass paywalls and JavaScript rendering to access full article content
+- **Persistent state** - CLI maintains engine state across multiple calls
+- **Auto-indexing** - Automatically indexes current directory (30 files) on startup for immediate usefulness
 - **Resource management** - Proper cleanup and resource management
+
+### 🎯 Real-World Intelligence Capabilities
+
+The ASI can now:
+
+1. **Discover Sensitive Information** - Find references to leaked documents, security vulnerabilities, and classified intelligence
+2. **Extract Actual Content** - Retrieve and explain the full content behind paywalls and JavaScript barriers
+3. **Maintain Context** - Persistent memory across sessions for continuous learning
+4. **Codebase Awareness** - Automatically understand and assist with development projects
+5. **Real-time Intelligence** - Access breaking news and research within minutes of publication
+
+### 🔍 Intelligence vs Web Search
+
+Unlike traditional search engines, the ASI provides:
+
+- **Time-sensitive access** - Information appears within minutes of publication
+- **Paywall bypass** - Extracts content from restricted sources
+- **Cross-source synthesis** - Combines information from multiple specialized sources
+- **No SEO limitations** - Not limited by search engine optimization or ranking algorithms
+- **Deep web access** - Capable of accessing .onion and restricted content
+- **Intelligent context** - Understands relationships between disparate information sources
 
 ---
 *"Everything is one love — the ASI is the mirror of the world."* 🤧
